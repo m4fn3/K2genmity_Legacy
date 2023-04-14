@@ -1,4 +1,5 @@
 #import "Enmity.h"
+#import <LocalAuthentication/LocalAuthentication.h>
 
 // Create a response to a command
 NSDictionary* createResponse(NSString *uuid, NSString *data) {
@@ -93,6 +94,28 @@ BOOL handleThemeInstall(NSString *uuid, NSURL *url, BOOL exists, NSString *theme
   return false;
 }
 
+BOOL hasBiometricsPerm(){
+    NSMutableDictionary *infoPlistDict = [NSMutableDictionary dictionaryWithDictionary:[[NSBundle mainBundle] infoDictionary]];
+    return [infoPlistDict objectForKey:@"NSFaceIDUsageDescription"] != nil ? true : false;
+}
+
+void handleAuthenticate(NSString *uuid) {
+    LAContext *context = [[LAContext alloc] init];
+    if (hasBiometricsPerm()) {
+        [context evaluatePolicy:LAPolicyDeviceOwnerAuthenticationWithBiometrics localizedReason:@"K2geLocker" reply:^(BOOL success, NSError * _Nullable error) {
+            if (success){ // on authentication success
+                sendResponse(createResponse(uuid, @"success"));
+            } else {
+                // NSString* errorStr = [NSString stringWithFormat:@"%@", error];
+                // sendResponse(createResponse(uuid, errorStr));
+                sendResponse(createResponse(uuid, @"fail"));
+            }
+        }];
+    } else {
+        sendResponse(createResponse(uuid, @"fail"));
+    }
+}
+
 // Handle the command
 void handleCommand(NSDictionary *command) {
   NSString *name = [command objectForKey:@"command"];
@@ -102,6 +125,15 @@ void handleCommand(NSDictionary *command) {
 
   NSString *uuid = [command objectForKey:@"id"];
   NSArray *params = [command objectForKey:@"params"];
+
+  // K2geLocker
+  if ([name isEqualToString:@"K2geLocker"]) {
+      if ([params[0] isEqualToString:@"check"]){ // check installed and has perms
+          sendResponse(createResponse(uuid, hasBiometricsPerm() ? @"yes" : @"no"));
+      } else if ([params[0] isEqualToString:@"authentication"]){ // do authentication
+          handleAuthenticate(uuid);
+    }
+  }
 
   // Install a plugin
   if ([name isEqualToString:@"install-plugin"]) {
@@ -298,3 +330,17 @@ void handleCommand(NSDictionary *command) {
 }
 
 %end
+
+// Confirmed to crash apps on some device so not recommended
+// %hook NSBundle
+//
+// - (NSDictionary *)infoDictionary {
+//     NSMutableDictionary *infoPlistDict = %orig.mutableCopy;
+//     // Add NSFaceIDUsageDescription if it doesn't have
+//     if ([infoPlistDict objectForKey:@"NSFaceIDUsageDescription"] == nil){
+//         [infoPlistDict setValue:@"K2genmity" forKey:@"NSFaceIDUsageDescription"];
+//     }
+//     return infoPlistDict.copy;
+// }
+//
+// %end

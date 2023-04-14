@@ -1,18 +1,32 @@
 name: Create a stable release
 on:
   push:
+    tags:
+      - '*'
   pull_request:
+    tags:
+      - '*'
   workflow_dispatch:
 
 jobs:
   build:
     name: Build and publish Enmity for iOS
+    permissions: write-all
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
         with:
           ref: 'main'
           submodules: true
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+
+      - name: Install CoreUtils
+        run: |
+          brew install coreutils
 
       - name: Check cache
         id: verify-cache
@@ -30,20 +44,24 @@ jobs:
         uses: Randomblock1/theos-action@v1
 
       - name: Prepare Azule
-        run : |
+        run: |
           git clone https://github.com/Al4ise/Azule ${{ github.workspace }}/Azule
           cd Azule
           git checkout 27c02b415cff15b1c131a0e95bcc2438023f86da
 
       - name: Prepare Enmity Patcher
-        run : |
+        run: |
           curl -L https://github.com/enmity-mod/patcher/releases/latest/download/patcher.mac-amd64 -o ${{ github.workspace }}/patcher
           chmod +x patcher
 
       - name: Patch Discord
-        run : |
+        run: |
           ${{ github.workspace }}/patcher
           mkdir out
+
+      - name: Patch Info.plist
+        run: |
+          python ipa_patcher.py
 
       - name: Retrieve version
         id: version
@@ -53,41 +71,41 @@ jobs:
         run: |
           rm -f packages/*
           gmake clean package FINALPACKAGE=1
-          mv $(find packages -name "*.deb" -print -quit) out/Enmity.deb
+          mv $(find packages -name "*.deb" -print -quit) out/K2genmity.deb
 
       - name: Build dev deb
         run: |
           rm -f packages/*
-          echo $"$(sed 's/Name\:.*/Name\: Enmity (Dev)/' control)" > control
-          echo $"$(sed 's/Package\:.*/Package\: app.enmity.dev/' control)" > control
+          echo $"$(sed 's/Name\:.*/Name\: K2genmity (Dev)/' control)" > control
+          echo $"$(sed 's/Package\:.*/Package\: app.k2genmity.dev/' control)" > control
           gmake clean package FINALPACKAGE=1 DEVTOOLS=1
-          mv $(find packages -name "*.deb" -print -quit) out/Enmity.Development.deb
+          mv $(find packages -name "*.deb" -print -quit) out/K2genmity.Development.deb
 
       - name: Build rootless deb
         run: |
           rm -f packages/*
-          echo $"$(sed 's/Name\:.*/Name\: Enmity (Rootless)/' control)" > control
-          echo $"$(sed 's/Package\:.*/Package\: app.enmity.rootless/' control)" > control
+          echo $"$(sed 's/Name\:.*/Name\: K2genmity (Rootless)/' control)" > control
+          echo $"$(sed 's/Package\:.*/Package\: app.k2genmity.rootless/' control)" > control
           gmake clean package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless
-          mv $(find packages -name "*.deb" -print -quit) out/Enmity.Rootless.deb
+          mv $(find packages -name "*.deb" -print -quit) out/K2genmity.Rootless.deb
 
       - name: Build dev rootless deb
         run: |
           rm -f packages/*
-          echo $"$(sed 's/Name\:.*/Name\: Enmity (Rootless)/' control)" > control
-          echo $"$(sed 's/Package\:.*/Package\: app.enmity.rootless/' control)" > control
+          echo $"$(sed 's/Name\:.*/Name\: K2genmity (Rootless)/' control)" > control
+          echo $"$(sed 's/Package\:.*/Package\: app.k2genmity.rootless/' control)" > control
           gmake clean package FINALPACKAGE=1 DEVTOOLS=1 THEOS_PACKAGE_SCHEME=rootless
-          mv $(find packages -name "*.deb" -print -quit) out/Enmity.Rootless.Development.deb
+          mv $(find packages -name "*.deb" -print -quit) out/K2genmity.Rootless.Development.deb
 
       - name: Create Enmity.ipa
         run : |
-          ${{ github.workspace }}/Azule/azule -U -i Enmity.ipa -o out -f out/Enmity.deb
-          mv out/Enmity+Enmity.deb.ipa out/Enmity.ipa
+          ${{ github.workspace }}/Azule/azule -U -i Enmity.ipa -o out -f out/K2genmity.deb
+          mv out/Enmity+K2genmity.deb.ipa out/K2genmity.ipa
 
       - name: Create Enmity.Dev.ipa
         run : |
-          ${{ github.workspace }}/Azule/azule -U -i Enmity.ipa -o out -f out/Enmity.Development.deb
-          mv out/Enmity+Enmity.Development.deb.ipa out/Enmity.Development.ipa
+          ${{ github.workspace }}/Azule/azule -U -i Enmity.ipa -o out -f out/K2genmity.Development.deb
+          mv out/Enmity+K2genmity.Development.deb.ipa out/K2genmity.Development.ipa
 
       - name: Create release
         uses: marvinpinto/action-automatic-releases@latest
@@ -95,5 +113,5 @@ jobs:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           prerelease: false
           automatic_release_tag: v${{ steps.version.outputs.__ENMITY_VERSION }}
-          title: "Enmity v${{ steps.version.outputs.__ENMITY_VERSION }}"
+          title: "K2genmity v${{ steps.version.outputs.__ENMITY_VERSION }}"
           files: out/*

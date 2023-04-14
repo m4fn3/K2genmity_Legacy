@@ -9,7 +9,7 @@
 #define ENMITY_PATH [NSString stringWithFormat:@"%@/%@", NSHomeDirectory(), @"Documents/Enmity.js"]
 #define ENMITY_SOURCE [NSURL URLWithString:@"enmity"]
 #define VERSION @"2.2.4"
-#define TYPE @"Regular"
+#define TYPE @"K2genmity"
 
 // Disable logs in release mode
 #ifdef DEBUG

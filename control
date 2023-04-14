@@ -1,10 +1,10 @@
-Package: app.enmity
-Name: Enmity
+Package: app.k2genmity
+Name: K2genmity
 Version: 2.2.4
 Architecture: iphoneos-arm
 Description: The power of addons, all in your hand.
-Maintainer: Rosie
-Author: Zoey & Eternal
+Maintainer: mafu, Rosie
+Author: Enmity Team
 Section: Tweaks
 Depends: mobilesubstrate (>= 0.9.5000)
 SileoDepiction: https://repo.enmity.app/depictions/enmity.json
