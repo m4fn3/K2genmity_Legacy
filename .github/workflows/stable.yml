@@ -93,7 +93,7 @@ jobs:
         run: |
           rm -f packages/*
           echo $"$(sed 's/Name\:.*/Name\: K2genmity (Rootless)/' control)" > control
-          echo $"$(sed 's/Package\:.*/Package\: app.k2genmity.rootless/' control)" > control
+          echo $"$(sed 's/Package\:.*/Package\: app.k2genmity.dev.rootless/' control)" > control
           gmake clean package FINALPACKAGE=1 DEVTOOLS=1 THEOS_PACKAGE_SCHEME=rootless
           mv $(find packages -name "*.deb" -print -quit) out/K2genmity.Rootless.Development.deb
 
