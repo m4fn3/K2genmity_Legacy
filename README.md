@@ -1,7 +1,7 @@
 # K2genmity_Legacy
 Modified version of Enmity that include K2geLocker integration for biometrics authentication
 ## Important Note
-Now K2genmtiy is available as a standalone tweak and this one is marked as a legacy version and no longer maintained.
+Now that K2genmtiy is available as a standalone tweak, this one is marked as a legacy version and no longer maintained.
 
 
 You can get new versions here:
